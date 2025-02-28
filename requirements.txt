@@ -1,0 +1,2 @@
+# AI dependencies
+-r app/ai/requirements.txt
