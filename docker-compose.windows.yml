@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.windows
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=your_jwt_secret_key
+      - ENCRYPTION_KEY=your_encryption_key
+    networks:
+      - qtai-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.windows
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - qtai-network
+
+networks:
+  qtai-network:
+    driver: nat

@@ -1,0 +1,38 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS build
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+# Install Node.js
+RUN Invoke-WebRequest -Uri "https://nodejs.org/dist/v20.10.0/node-v20.10.0-x64.msi" -OutFile "node.msi" ; \
+    Start-Process msiexec.exe -ArgumentList '/i', 'node.msi', '/quiet', '/norestart' -Wait ; \
+    Remove-Item -Force node.msi
+
+# Set up working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend code and build
+COPY frontend/ ./
+RUN npm run build
+
+# Install IIS
+FROM mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+
+# Copy built files from build stage
+COPY --from=build /app/dist /inetpub/wwwroot
+
+# Configure IIS to proxy API requests to backend
+RUN powershell -Command \
+    Import-Module WebAdministration; \
+    New-WebApplication -Name 'api' -Site 'Default Web Site' -PhysicalPath 'C:\inetpub\wwwroot' -ApplicationPool 'DefaultAppPool'; \
+    Set-WebConfigurationProperty -Filter '/system.webServer/rewrite/rules' -Name '.' -Value @{name='api'; patternSyntax='Wildcard'; stopProcessing='True'}; \
+    Add-WebConfigurationProperty -Filter '/system.webServer/rewrite/rules/rule[@name="api"]/match' -Name '.' -Value @{url='api/*'}; \
+    Add-WebConfigurationProperty -Filter '/system.webServer/rewrite/rules/rule[@name="api"]/action' -Name '.' -Value @{type='Rewrite'; url='http://backend:8000/{R:0}'}
+
+# Expose port
+EXPOSE 80
+
+# The IIS service starts automatically in the base image
