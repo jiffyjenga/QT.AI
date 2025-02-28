@@ -29,7 +29,7 @@ if %errorlevel% equ 0 (
     echo.
     echo QT.AI Trading Bot is now running!
     echo.
-    echo Frontend: http://localhost
+    echo Frontend: http://localhost:3000
     echo Backend API: http://localhost:8000
     echo.
     echo To stop the containers, run: docker-compose -f docker-compose.windows.yml down
