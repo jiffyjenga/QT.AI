@@ -1,26 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SetupWizard from './components/setup/SetupWizard';
+import Dashboard from './components/Dashboard';
 
-// Placeholder components for other routes
-const Login = () => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
-      <h1 className="text-2xl font-bold mb-6">Login to QT.AI</h1>
-      <p className="text-gray-600 mb-4">Login functionality will be implemented here.</p>
-      <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-        Go to Setup Wizard
-      </button>
+// Login component
+const Login = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // In a real implementation, this would call the login API
+      // const response = await authAPI.login(email, password);
+      // localStorage.setItem('token', response.data.access_token);
+      
+      // For demo purposes, just redirect to setup
+      window.location.href = '/setup';
+      
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Invalid email or password');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold mb-6 text-center">Login to QT.AI</h1>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleLogin}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Sign In'}
+            </button>
+          </div>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <a href="/register" className="text-blue-600 hover:text-blue-800">
+              Register
+            </a>
+          </p>
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-500">
+            For demo purposes, you can also{' '}
+            <a href="/setup" className="text-blue-600 hover:text-blue-800">
+              go directly to the setup wizard
+            </a>
+            {' '}or{' '}
+            <a href="/dashboard" className="text-blue-600 hover:text-blue-800">
+              view the dashboard
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
-);
-
-const Dashboard = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold mb-6">QT.AI Dashboard</h1>
-    <p className="text-gray-600 mb-4">Dashboard will be implemented here.</p>
-  </div>
-);
+  );
+};
 
 const App: React.FC = () => {
   return (
@@ -30,7 +123,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<SetupWizard />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<Navigate to="/setup" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </Router>
