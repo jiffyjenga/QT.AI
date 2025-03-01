@@ -5,7 +5,7 @@ This module contains all API routers and endpoints.
 """
 from fastapi import APIRouter
 
-from app.api.endpoints import users, accounts, setup
+from app.api.endpoints import users, accounts, setup, api_keys, auth
 
 # Create main API router
 api_router = APIRouter()
@@ -14,3 +14,5 @@ api_router = APIRouter()
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(setup.router, prefix="/setup", tags=["setup"])
+api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api-keys"])
+api_router.include_router(auth.router, tags=["auth"])

@@ -24,6 +24,8 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     
     @validator('password')
     def password_strength(cls, v):
@@ -36,6 +38,14 @@ class UserCreate(UserBase):
         if not any(c.isdigit() for c in v):
             raise ValueError('Password must contain at least one number')
         return v
+        
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Set full_name from first_name and last_name if provided
+        if self.first_name and self.last_name:
+            self.full_name = f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            self.full_name = self.first_name
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None

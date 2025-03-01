@@ -22,8 +22,17 @@ api.interceptors.request.use(
 
 // Auth API
 export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/token', { username: email, password }),
+  login: (email: string, password: string) => {
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+    
+    return api.post('/token', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+  },
   register: (userData: any) => 
     api.post('/users', userData),
   getCurrentUser: () => 
@@ -62,6 +71,19 @@ export const accountAPI = {
     api.post('/accounts/me/allocate', { amount, asset_type: assetType, asset_id: assetId }),
   deallocateFunds: (amount: number, assetType: string, assetId?: string) => 
     api.post('/accounts/me/deallocate', { amount, asset_type: assetType, asset_id: assetId }),
+  // API Key Management
+  getApiKeys: () => 
+    api.get('/api-keys'),
+  getApiKey: (apiKeyId: string) => 
+    api.get(`/api-keys/${apiKeyId}`),
+  saveApiKey: (exchange: string, apiKey: string, apiSecret: string, label?: string, permissions?: string) => 
+    api.post('/api-keys', { exchange, api_key: apiKey, api_secret: apiSecret, label, permissions }),
+  updateApiKey: (apiKeyId: string, updateData: any) => 
+    api.put(`/api-keys/${apiKeyId}`, updateData),
+  deleteApiKey: (apiKeyId: string) => 
+    api.delete(`/api-keys/${apiKeyId}`),
+  testApiKey: (apiKeyId: string) => 
+    api.post(`/api-keys/${apiKeyId}/test`),
 };
 
 export default api;

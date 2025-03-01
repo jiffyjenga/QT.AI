@@ -18,6 +18,10 @@ async def create_new_user(user_create: UserCreate):
             detail="Email already registered"
         )
     
+    # If username is not provided, generate one from email
+    if not user_create.username:
+        user_create.username = user_create.email.split('@')[0]
+    
     # Check if username already exists
     db_user = get_user_by_username(user_create.username)
     if db_user:

@@ -1,124 +1,90 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-interface AuthState {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: any | null;
-  setupCompleted: boolean;
-}
+import { authAPI } from '../services/api';
 
 export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-    isLoading: true,
-    user: null,
-    setupCompleted: false
-  });
-  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [setupCompleted, setSetupCompleted] = useState<boolean>(false);
 
+  // Check if user is authenticated on mount
   useEffect(() => {
-    // Check if token exists in localStorage
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      setAuthState({
-        isAuthenticated: false,
-        isLoading: false,
-        user: null,
-        setupCompleted: false
-      });
-      return;
-    }
-
-    // In a real implementation, this would validate the token with the backend
-    // and fetch the user data
-    // For demo purposes, we'll just set isAuthenticated to true
-    
-    // Mock user data
-    const mockUser = {
-      id: 'user123',
-      email: 'user@example.com',
-      username: 'username',
-      setup_completed: true
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        try {
+          const response = await authAPI.getCurrentUser();
+          setUser(response.data);
+          setIsAuthenticated(true);
+          setSetupCompleted(response.data.setup_completed || false);
+        } catch (error) {
+          console.error('Error checking authentication:', error);
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+      
+      setLoading(false);
     };
     
-    setAuthState({
-      isAuthenticated: true,
-      isLoading: false,
-      user: mockUser,
-      setupCompleted: mockUser.setup_completed
-    });
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  // Login function
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real implementation, this would call the login API
-      // const response = await authAPI.login(email, password);
-      // localStorage.setItem('token', response.data.access_token);
+      const response = await authAPI.login(email, password);
       
-      // For demo purposes, just set a mock token
-      localStorage.setItem('token', 'mock_token');
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.access_token);
       
-      // Mock user data
-      const mockUser = {
-        id: 'user123',
-        email,
-        username: email.split('@')[0],
-        setup_completed: false
-      };
-      
-      setAuthState({
-        isAuthenticated: true,
-        isLoading: false,
-        user: mockUser,
-        setupCompleted: mockUser.setup_completed
-      });
-      
-      // Redirect based on setup completion
-      if (mockUser.setup_completed) {
-        navigate('/dashboard');
-      } else {
-        navigate('/setup');
-      }
+      // Get user data
+      const userResponse = await authAPI.getCurrentUser();
+      setUser(userResponse.data);
+      setIsAuthenticated(true);
+      setSetupCompleted(userResponse.data.setup_completed || false);
       
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login error:', error);
       return false;
     }
   };
 
+  // Logout function
   const logout = () => {
     localStorage.removeItem('token');
-    setAuthState({
-      isAuthenticated: false,
-      isLoading: false,
-      user: null,
-      setupCompleted: false
-    });
-    navigate('/login');
+    setIsAuthenticated(false);
+    setUser(null);
+    setSetupCompleted(false);
   };
 
-  const completeSetup = () => {
-    if (authState.user) {
-      const updatedUser = {
-        ...authState.user,
-        setup_completed: true
-      };
-      
-      setAuthState({
-        ...authState,
-        user: updatedUser,
-        setupCompleted: true
-      });
+  // Register function
+  const register = async (userData: any): Promise<boolean> => {
+    try {
+      await authAPI.register(userData);
+      return true;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
     }
   };
 
+  // Complete setup function
+  const completeSetup = () => {
+    setSetupCompleted(true);
+  };
+
   return {
-    ...authState,
+    isAuthenticated,
+    user,
+    loading,
+    setupCompleted,
     login,
     logout,
+    register,
     completeSetup
   };
 };
