@@ -1,3 +1,4 @@
+# Docker Compose configuration for Windows
 services:
   backend:
     build:
@@ -6,8 +7,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - JWT_SECRET=your_jwt_secret_key
-      - ENCRYPTION_KEY=your_encryption_key
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./app:/app
     networks:
       - qtai-network
 
@@ -16,12 +18,14 @@ services:
       context: .
       dockerfile: Dockerfile.frontend.windows
     ports:
-      - "3000:80"  # Changed from 80:80 to 3000:80
+      - "3000:3000"
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/app
     networks:
       - qtai-network
 
 networks:
   qtai-network:
-    driver: nat
+    driver: bridge

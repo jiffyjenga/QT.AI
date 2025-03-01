@@ -1,25 +1,24 @@
-FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS build
+# Use a Windows-compatible base image
+FROM python:3.12-windowsservercore
 
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
-# Install Python
-RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" -OutFile "python-3.12.0-amd64.exe" ; \
-    Start-Process python-3.12.0-amd64.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait ; \
-    Remove-Item -Force python-3.12.0-amd64.exe
-
-# Set up working directory
+# Set working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
+# Copy requirements file
 COPY requirements.txt .
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY app/ app/
-COPY run_api.py .
+COPY app/ /app/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["python", "run_api.py"]
+# Start the application
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
