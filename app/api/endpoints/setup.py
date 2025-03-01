@@ -97,9 +97,10 @@ class SecuritySetupData(BaseModel):
 @router.post("/security", response_model=SetupWizardStatus)
 async def setup_security(security_data: SecuritySetupData, current_user: User = Depends(get_current_user)):
     # Update user security settings
+    from app.models.user import TwoFactorMethod
     user_update = UserUpdate(
         two_factor_enabled=security_data.two_factor_enabled,
-        two_factor_method=security_data.two_factor_method
+        two_factor_method=TwoFactorMethod(security_data.two_factor_method)
     )
     update_user(current_user.id, user_update.dict(exclude_unset=True))
     
