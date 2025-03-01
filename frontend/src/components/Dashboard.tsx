@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountManagement from './account/AccountManagement';
+import { useAuthContext } from '../App';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { logout } = useAuthContext();
   const [activeSection, setActiveSection] = useState<string>('account');
 
   // Render active section content
@@ -65,7 +67,7 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">QT.AI Trading Bot</h1>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => logout()}
             className="text-gray-600 hover:text-gray-900"
           >
             Logout

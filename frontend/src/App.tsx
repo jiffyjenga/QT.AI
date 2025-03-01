@@ -1,7 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SetupWizard from './components/setup/SetupWizard';
 import Dashboard from './components/Dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './hooks/useAuth';
+
+// Create Auth Context
+export const AuthContext = createContext<ReturnType<typeof useAuth> | null>(null);
+
+// Auth Provider Component
+const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const auth = useAuth();
+  
+  return (
+    <AuthContext.Provider value={auth}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Hook to use auth context
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+};
 
 // Login component
 const Login = () => {
@@ -9,6 +34,12 @@ const Login = () => {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const { login, isAuthenticated, setupCompleted } = useAuthContext();
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    return <Navigate to={setupCompleted ? '/dashboard' : '/setup'} replace />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,12 +53,11 @@ const Login = () => {
       setLoading(true);
       setError(null);
       
-      // In a real implementation, this would call the login API
-      // const response = await authAPI.login(email, password);
-      // localStorage.setItem('token', response.data.access_token);
+      const success = await login(email, password);
       
-      // For demo purposes, just redirect to setup
-      window.location.href = '/setup';
+      if (!success) {
+        setError('Invalid email or password');
+      }
       
       setLoading(false);
     } catch (err: any) {
@@ -115,17 +145,60 @@ const Login = () => {
   );
 };
 
+// Register component placeholder
+const Register = () => {
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold mb-6 text-center">Register for QT.AI</h1>
+        <p className="text-gray-600 mb-4">Registration functionality will be implemented here.</p>
+        <a 
+          href="/login" 
+          className="block text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+        >
+          Back to Login
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// App Component with Router
+const AppWithRouter: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route 
+          path="/setup" 
+          element={
+            <ProtectedRoute requireSetup={false}>
+              <SetupWizard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute requireSetup={true}>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </div>
+  );
+};
+
+// Main App Component with Auth Provider
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/setup" element={<SetupWizard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </div>
+      <AuthProvider>
+        <AppWithRouter />
+      </AuthProvider>
     </Router>
   );
 };

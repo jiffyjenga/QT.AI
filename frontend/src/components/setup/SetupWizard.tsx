@@ -6,9 +6,11 @@ import SecuritySetup from './SecuritySetup';
 import TradingPreferencesSetup from './TradingPreferencesSetup';
 import AccountFundingSetup from './AccountFundingSetup';
 import SetupConfirmation from './SetupConfirmation';
+import { useAuthContext } from '../../App';
 
 const SetupWizard: React.FC = () => {
   const navigate = useNavigate();
+  const { completeSetup } = useAuthContext();
   const [currentStep, setCurrentStep] = useState<string>('profile');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +86,8 @@ const SetupWizard: React.FC = () => {
           break;
         case 'confirmation':
           response = await setupAPI.completeSetup();
-          // Redirect to dashboard after completion
+          // Update auth context and redirect to dashboard after completion
+          completeSetup();
           navigate('/dashboard');
           break;
         default:
