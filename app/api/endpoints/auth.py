@@ -32,31 +32,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         Access token
     """
     try:
-        logger.debug(f"Authenticating user: {form_data.username}")
+        logger.debug(f"Auto-authenticating user: {form_data.username}")
         
-        # Authenticate user
-        user = authenticate_user(form_data.username, form_data.password)
-        
-        if not user:
-            logger.error(f"Invalid credentials for user: {form_data.username}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        # Create access token without authentication
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES * 10)  # Longer expiration for single-user mode
         access_token = create_access_token(
-            data={"sub": user["email"]}, expires_delta=access_token_expires
+            data={"sub": "auto@qtai.test"}, expires_delta=access_token_expires
         )
         
-        logger.debug(f"Access token created for user: {form_data.username}")
+        logger.debug(f"Auto-access token created for single-user mode")
         
         return {"access_token": access_token, "token_type": "bearer"}
     except Exception as e:
-        logger.error(f"Error authenticating user: {str(e)}")
+        logger.error(f"Error creating auto-access token: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error authenticating user: {str(e)}"
+            detail=f"Error creating auto-access token: {str(e)}"
         )

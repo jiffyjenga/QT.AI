@@ -39,11 +39,56 @@ async def create_new_user(user_create: UserCreate):
     return User(**created_user)
 
 @router.get("/me", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
+async def read_users_me():
+    """
+    Get the current user.
+    
+    Returns:
+        Current user
+    """
+    # Return the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if users:
+        return users[0]
+    
+    # If no users exist, return a default user
+    return {
+        "id": "default_user",
+        "email": "auto@qtai.test",
+        "username": "auto_user",
+        "full_name": "Auto User",
+        "role": "user",
+        "two_factor_enabled": False,
+        "two_factor_method": "none",
+        "setup_completed": True,
+        "is_active": True
+    }
 
 @router.put("/me", response_model=User)
-async def update_user_me(user_update: UserUpdate, current_user: User = Depends(get_current_active_user)):
+async def update_user_me(user_update: UserUpdate):
+    """
+    Update the current user.
+    
+    Args:
+        user_update: User update data
+        
+    Returns:
+        Updated user
+    """
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    current_user = users[0]
+    
     # If password is being updated, hash it
     if user_update.password:
         user_update_dict = user_update.dict(exclude={"password"})
@@ -51,7 +96,7 @@ async def update_user_me(user_update: UserUpdate, current_user: User = Depends(g
     else:
         user_update_dict = user_update.dict(exclude_unset=True)
     
-    updated_user = update_user(current_user.id, user_update_dict)
+    updated_user = update_user(current_user["id"], user_update_dict)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -61,14 +106,17 @@ async def update_user_me(user_update: UserUpdate, current_user: User = Depends(g
     return User(**updated_user)
 
 @router.get("/{user_id}", response_model=User)
-async def read_user(user_id: str, current_user: User = Depends(get_current_active_user)):
-    # Only admins can view other users
-    if current_user.role != "admin" and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+async def read_user(user_id: str):
+    """
+    Get a user by ID.
     
+    Args:
+        user_id: User ID
+        
+    Returns:
+        User
+    """
+    # In single-user mode, always allow access to any user
     user = get_user(user_id)
     if not user:
         raise HTTPException(
@@ -79,14 +127,17 @@ async def read_user(user_id: str, current_user: User = Depends(get_current_activ
     return User(**user)
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user_by_id(user_id: str, current_user: User = Depends(get_current_active_user)):
-    # Only admins can delete users, or users can delete themselves
-    if current_user.role != "admin" and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+async def delete_user_by_id(user_id: str):
+    """
+    Delete a user by ID.
     
+    Args:
+        user_id: User ID
+        
+    Returns:
+        None
+    """
+    # In single-user mode, always allow deletion of any user
     success = delete_user(user_id)
     if not success:
         raise HTTPException(

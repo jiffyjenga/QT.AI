@@ -10,9 +10,30 @@ from app.db import create_account, get_account, get_account_by_user_id, update_a
 router = APIRouter()
 
 @router.post("/", response_model=Account, status_code=status.HTTP_201_CREATED)
-async def create_new_account(account_create: AccountCreate, current_user: User = Depends(get_current_active_user)):
+async def create_new_account(account_create: AccountCreate):
+    """
+    Create a new account.
+    
+    Args:
+        account_create: Account creation data
+        
+    Returns:
+        Created account
+    """
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
     # Check if user already has an account
-    existing_account = get_account_by_user_id(current_user.id)
+    existing_account = get_account_by_user_id(user_id)
     if existing_account:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -21,7 +42,7 @@ async def create_new_account(account_create: AccountCreate, current_user: User =
     
     # Create account with initial deposit
     account_data = account_create.dict()
-    account_data["user_id"] = current_user.id
+    account_data["user_id"] = user_id
     
     # Set initial balances based on initial deposit
     initial_deposit = account_data.pop("initial_deposit", Decimal("0.00"))
@@ -45,8 +66,27 @@ async def create_new_account(account_create: AccountCreate, current_user: User =
     return Account(**created_account)
 
 @router.get("/me", response_model=Account)
-async def read_my_account(current_user: User = Depends(get_current_active_user)):
-    account = get_account_by_user_id(current_user.id)
+async def read_my_account():
+    """
+    Get the current user's account.
+    
+    Returns:
+        Account
+    """
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -56,9 +96,30 @@ async def read_my_account(current_user: User = Depends(get_current_active_user))
     return Account(**account)
 
 @router.put("/me", response_model=Account)
-async def update_my_account(account_update: AccountUpdate, current_user: User = Depends(get_current_active_user)):
-    # Get current account
-    account = get_account_by_user_id(current_user.id)
+async def update_my_account(account_update: AccountUpdate):
+    """
+    Update the current user's account.
+    
+    Args:
+        account_update: Account update data
+        
+    Returns:
+        Updated account
+    """
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -72,15 +133,36 @@ async def update_my_account(account_update: AccountUpdate, current_user: User = 
     return Account(**updated_account)
 
 @router.post("/me/deposit", response_model=Account)
-async def deposit_funds(amount: Decimal, current_user: User = Depends(get_current_active_user)):
+async def deposit_funds(amount: Decimal):
+    """
+    Deposit funds to the current user's account.
+    
+    Args:
+        amount: Deposit amount
+        
+    Returns:
+        Updated account
+    """
     if amount <= Decimal("0.00"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Deposit amount must be greater than zero"
         )
     
-    # Get current account
-    account = get_account_by_user_id(current_user.id)
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -111,15 +193,36 @@ async def deposit_funds(amount: Decimal, current_user: User = Depends(get_curren
     return Account(**updated_account)
 
 @router.post("/me/withdraw", response_model=Account)
-async def withdraw_funds(amount: Decimal, current_user: User = Depends(get_current_active_user)):
+async def withdraw_funds(amount: Decimal):
+    """
+    Withdraw funds from the current user's account.
+    
+    Args:
+        amount: Withdrawal amount
+        
+    Returns:
+        Updated account
+    """
     if amount <= Decimal("0.00"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Withdrawal amount must be greater than zero"
         )
     
-    # Get current account
-    account = get_account_by_user_id(current_user.id)
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -157,15 +260,38 @@ async def withdraw_funds(amount: Decimal, current_user: User = Depends(get_curre
     return Account(**updated_account)
 
 @router.post("/me/allocate", response_model=Account)
-async def allocate_trading_funds(amount: Decimal, asset_type: str, asset_id: Optional[str] = None, current_user: User = Depends(get_current_active_user)):
+async def allocate_trading_funds(amount: Decimal, asset_type: str, asset_id: Optional[str] = None):
+    """
+    Allocate funds for trading.
+    
+    Args:
+        amount: Allocation amount
+        asset_type: Asset type
+        asset_id: Asset ID
+        
+    Returns:
+        Updated account
+    """
     if amount <= Decimal("0.00"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Allocation amount must be greater than zero"
         )
     
-    # Get current account
-    account = get_account_by_user_id(current_user.id)
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -205,15 +331,38 @@ async def allocate_trading_funds(amount: Decimal, asset_type: str, asset_id: Opt
     return Account(**updated_account)
 
 @router.post("/me/deallocate", response_model=Account)
-async def deallocate_trading_funds(amount: Decimal, asset_type: str, asset_id: Optional[str] = None, current_user: User = Depends(get_current_active_user)):
+async def deallocate_trading_funds(amount: Decimal, asset_type: str, asset_id: Optional[str] = None):
+    """
+    Deallocate funds from trading.
+    
+    Args:
+        amount: Deallocation amount
+        asset_type: Asset type
+        asset_id: Asset ID
+        
+    Returns:
+        Updated account
+    """
     if amount <= Decimal("0.00"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Deallocation amount must be greater than zero"
         )
     
-    # Get current account
-    account = get_account_by_user_id(current_user.id)
+    # Get the default user for single-user mode
+    from app.db import db
+    
+    users = list(db["users"].values())
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found"
+        )
+    
+    user_id = users[0]["id"]
+    
+    # Get account by user ID
+    account = get_account_by_user_id(user_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -253,20 +402,22 @@ async def deallocate_trading_funds(amount: Decimal, asset_type: str, asset_id: O
     return Account(**updated_account)
 
 @router.get("/{account_id}", response_model=Account)
-async def read_account(account_id: str, current_user: User = Depends(get_current_active_user)):
-    # Only admins can view other accounts
+async def read_account(account_id: str):
+    """
+    Get an account by ID.
+    
+    Args:
+        account_id: Account ID
+        
+    Returns:
+        Account
+    """
+    # In single-user mode, always allow access to any account
     account = get_account(account_id)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Account not found"
-        )
-    
-    # Check permissions
-    if current_user.role != "admin" and account["user_id"] != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
         )
     
     return Account(**account)

@@ -2,55 +2,34 @@ import { useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 
 export const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [setupCompleted, setSetupCompleted] = useState<boolean>(false);
+  // Auto-authenticate without requiring login
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [user, setUser] = useState<any>({
+    id: 'auto-user',
+    email: 'auto@qtai.test',
+    username: 'auto_user',
+    full_name: 'Auto User',
+    role: 'user',
+    setup_completed: true
+  });
+  const [loading, setLoading] = useState<boolean>(false);
+  const [setupCompleted, setSetupCompleted] = useState<boolean>(true);
 
-  // Check if user is authenticated on mount
+  // No need to check authentication on mount since we're auto-authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const response = await authAPI.getCurrentUser();
-          setUser(response.data);
-          setIsAuthenticated(true);
-          setSetupCompleted(response.data.setup_completed || false);
-        } catch (error) {
-          console.error('Error checking authentication:', error);
-          localStorage.removeItem('token');
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      }
-      
-      setLoading(false);
-    };
+    // Set a dummy token to ensure API calls work
+    if (!localStorage.getItem('token')) {
+      localStorage.setItem('token', 'auto-authenticated-token');
+    }
     
-    checkAuth();
+    // Nothing else to do here since we're auto-authenticated
   }, []);
 
-  // Login function
+  // Login function - always returns true for direct access
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const response = await authAPI.login(email, password);
-      
-      // Store token in localStorage
-      localStorage.setItem('token', response.data.access_token);
-      
-      // Get user data
-      const userResponse = await authAPI.getCurrentUser();
-      setUser(userResponse.data);
-      setIsAuthenticated(true);
-      setSetupCompleted(userResponse.data.setup_completed || false);
-      
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    }
+    // No need to make actual API call since we're auto-authenticated
+    console.log('Auto-login successful');
+    return true;
   };
 
   // Logout function
