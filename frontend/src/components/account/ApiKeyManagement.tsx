@@ -5,11 +5,10 @@ import Select from '../common/Select';
 import { accountAPI } from '../../services/api';
 
 interface ApiKeyManagementProps {
-  account: any;
   onApiKeyUpdate: () => void;
 }
 
-const ApiKeyManagement: React.FC<ApiKeyManagementProps> = ({ account, onApiKeyUpdate }) => {
+const ApiKeyManagement: React.FC<ApiKeyManagementProps> = ({ onApiKeyUpdate }) => {
   const [exchange, setExchange] = useState<string>('binance');
   const [apiKey, setApiKey] = useState<string>('');
   const [apiSecret, setApiSecret] = useState<string>('');

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../App';
 import Button from './common/Button';
 import Input from './common/Input';
 
 const Login: React.FC = () => {
-  const navigate = useNavigate();
   const { login, isAuthenticated, setupCompleted } = useAuthContext();
   
   const [email, setEmail] = useState<string>('');

@@ -195,7 +195,6 @@ const AccountManagement: React.FC<AccountManagementProps> = () => {
       case 'api-keys':
         return (
           <ApiKeyManagement 
-            account={account} 
             onApiKeyUpdate={fetchAccountData} 
           />
         );

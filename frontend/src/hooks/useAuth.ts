@@ -12,7 +12,8 @@ export const useAuth = () => {
     role: 'user',
     setup_completed: true
   });
-  const [loading, setLoading] = useState<boolean>(false);
+  // Use loading state without the setter since we're auto-authenticated
+  const [loading] = useState<boolean>(false);
   const [setupCompleted, setSetupCompleted] = useState<boolean>(true);
 
   // No need to check authentication on mount since we're auto-authenticated
@@ -26,7 +27,7 @@ export const useAuth = () => {
   }, []);
 
   // Login function - always returns true for direct access
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (_email: string, _password: string): Promise<boolean> => {
     // No need to make actual API call since we're auto-authenticated
     console.log('Auto-login successful');
     return true;
