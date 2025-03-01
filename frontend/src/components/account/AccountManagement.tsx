@@ -5,6 +5,7 @@ import Input from '../common/Input';
 import AccountOverview from './AccountOverview';
 import TransactionHistory from './TransactionHistory';
 import TradingAllocation from './TradingAllocation';
+import ApiKeyManagement from './ApiKeyManagement';
 
 interface AccountManagementProps {
   // Props can be added as needed
@@ -191,6 +192,13 @@ const AccountManagement: React.FC<AccountManagementProps> = () => {
             currency={account?.currency || 'USD'} 
           />
         );
+      case 'api-keys':
+        return (
+          <ApiKeyManagement 
+            account={account} 
+            onApiKeyUpdate={fetchAccountData} 
+          />
+        );
       default:
         return <div>Unknown tab</div>;
     }
@@ -257,6 +265,16 @@ const AccountManagement: React.FC<AccountManagementProps> = () => {
             onClick={() => setActiveTab('history')}
           >
             Transaction History
+          </button>
+          <button
+            className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'api-keys'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => setActiveTab('api-keys')}
+          >
+            API Keys
           </button>
         </nav>
       </div>
