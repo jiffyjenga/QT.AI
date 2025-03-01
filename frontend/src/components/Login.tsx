@@ -5,17 +5,15 @@ import Button from './common/Button';
 import Input from './common/Input';
 
 const Login: React.FC = () => {
-  const { login, isAuthenticated, setupCompleted } = useAuthContext();
+  const { login } = useAuthContext();
   
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to={setupCompleted ? '/dashboard' : '/setup'} replace />;
-  }
+  // Always redirect to dashboard in single-user mode
+  return <Navigate to="/dashboard" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

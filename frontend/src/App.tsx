@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import SetupWizard from './components/setup/SetupWizard';
 import Dashboard from './components/Dashboard';
 import { useAuth } from './hooks/useAuth';
 
@@ -29,15 +28,16 @@ export const useAuthContext = () => {
 
 // App Component with Router
 const AppWithRouter: React.FC = () => {
+  // Force redirect to dashboard in single-user mode
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
-        {/* Skip login page as requested by user */}
+        {/* All routes redirect to dashboard in single-user mode */}
         <Route path="/login" element={<Navigate to="/dashboard" replace />} />
         <Route path="/register" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/setup" element={<SetupWizard />} />
+        <Route path="/setup" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </div>
   );
