@@ -11,8 +11,8 @@ from app.api.endpoints import users, accounts, setup, api_keys, auth
 api_router = APIRouter()
 
 # Include endpoint routers
+api_router.include_router(auth.router, prefix="/token", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(setup.router, prefix="/setup", tags=["setup"])
 api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api-keys"])
-api_router.include_router(auth.router, tags=["auth"])
